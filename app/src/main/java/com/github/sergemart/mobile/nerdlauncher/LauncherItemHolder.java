@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -15,7 +17,8 @@ import java.util.List;
 class LauncherItemHolder extends RecyclerView.ViewHolder {
 
     private View mItemView;
-    private TextView mActivityNameTextView;
+    private TextView mAppNameTextView;
+    private ImageView mAppIconImageView;
 
     private Context mContext;
     private PackageManager mPackageManager;
@@ -42,7 +45,8 @@ class LauncherItemHolder extends RecyclerView.ViewHolder {
      * Get references to widgets
      */
     private void getWidgetReferences(View itemView) {
-        mActivityNameTextView = itemView.findViewById(R.id.textView_activity_name);
+        mAppNameTextView = itemView.findViewById(R.id.textView_app_name);
+        mAppIconImageView = itemView.findViewById(R.id.imageView_app_icon);
     }
 
 
@@ -52,8 +56,9 @@ class LauncherItemHolder extends RecyclerView.ViewHolder {
     private void setWidgetListeners() {
         mItemView.setOnClickListener((view) -> {
             ActivityInfo activityInfo = mResolveInfo.activityInfo;
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.setClassName(activityInfo.applicationInfo.packageName, activityInfo.name);
+            Intent intent = new Intent(Intent.ACTION_MAIN)
+                    .setClassName(activityInfo.applicationInfo.packageName, activityInfo.name)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);                                       // to start activities in their own tasks
             mContext.startActivity(intent);
         });
     }
@@ -66,7 +71,12 @@ class LauncherItemHolder extends RecyclerView.ViewHolder {
      */
     public void bind(int position) {
         mResolveInfo = mResolveInfos.get(position);
-        mActivityNameTextView.setText(mResolveInfo.loadLabel(mPackageManager).toString());
+
+        String appLabel = mResolveInfo.loadLabel(mPackageManager).toString();
+        mAppNameTextView.setText(appLabel);
+
+        Drawable appIcon = mResolveInfo.loadIcon(mPackageManager);
+        mAppIconImageView.setImageDrawable(appIcon);
     }
 
 

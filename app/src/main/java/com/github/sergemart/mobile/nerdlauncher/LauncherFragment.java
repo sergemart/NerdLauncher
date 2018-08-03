@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,6 +24,7 @@ public class LauncherFragment extends Fragment {
     private static final String TAG = "LauncherFragment";
 
     private RecyclerView mAppListRecyclerView;
+    private List<ResolveInfo> mResolveInfos;
 
 
     // --------------------------- Override fragment event handlers
@@ -64,7 +66,8 @@ public class LauncherFragment extends Fragment {
 
     private void setWidgetAttributes() {
         mAppListRecyclerView.setLayoutManager(new LinearLayoutManager( this.getActivity() ));       // set up the RecyclerView
-        mAppListRecyclerView.setAdapter(new LauncherItemAdapter( this.getActivity() ));
+        this.setupAdapter();
+        mAppListRecyclerView.setAdapter(new LauncherItemAdapter(this.getActivity(), mResolveInfos));
     }
 
 
@@ -81,8 +84,15 @@ public class LauncherFragment extends Fragment {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager packageManager = Objects.requireNonNull( this.getActivity() ).getPackageManager();
-        List<ResolveInfo> activities = packageManager.queryIntentActivities(intent, 0);
-        Log.i(TAG, "Found " + activities.size() + " activities.");
+        mResolveInfos = packageManager.queryIntentActivities(intent, 0);
+
+        // Sort the list using a lambda implementing the Comparator and its compare()
+        Collections.sort(mResolveInfos, (ResolveInfo a, ResolveInfo b) -> String.CASE_INSENSITIVE_ORDER.compare(
+                a.loadLabel(packageManager).toString(),
+                b.loadLabel(packageManager).toString()
+        ));
+
+        Log.i(TAG, "Found " + mResolveInfos.size() + " activities.");
     }
 
 
